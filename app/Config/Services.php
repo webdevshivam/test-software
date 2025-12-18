@@ -3,6 +3,8 @@
 namespace Config;
 
 use CodeIgniter\Config\BaseService;
+use App\Services\DashboardService;
+use App\Services\TrialService;
 
 /**
  * Services Configuration file.
@@ -19,14 +21,27 @@ use CodeIgniter\Config\BaseService;
  */
 class Services extends BaseService
 {
-    /*
-     * public static function example($getShared = true)
-     * {
-     *     if ($getShared) {
-     *         return static::getSharedInstance('example');
-     *     }
-     *
-     *     return new \CodeIgniter\Example();
-     * }
-     */
+    public static function dashboardService(bool $getShared = true): DashboardService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('dashboardService');
+        }
+
+        return new DashboardService(
+            new \App\Models\PlayerModel(),
+            new \App\Models\TrialModel(),
+            new \App\Models\PaymentModel()
+        );
+    }
+
+    public static function trialService(bool $getShared = true): TrialService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('trialService');
+        }
+
+        return new TrialService(
+            new \App\Models\TrialModel()
+        );
+    }
 }

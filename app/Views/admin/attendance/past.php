@@ -4,25 +4,13 @@
 <div class="space-y-4">
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-lg font-semibold text-slate-900">Attendance</h1>
+            <h1 class="text-lg font-semibold text-slate-900">Past Trials - Attendance</h1>
             <p class="text-xs text-slate-500 mt-0.5">
-                Select an upcoming trial to mark player attendance and review dues.
+                Trials that have already finished. You can open reports or exports from here.
             </p>
         </div>
-        <div class="text-[11px] text-slate-500">
-            <?php if (($pastCount ?? 0) > 0): ?>
-                <a href="<?= site_url('admin/attendance/past') ?>" class="text-emerald-700 hover:text-emerald-900 font-medium">
-                    View past trials (<?= (int) $pastCount ?>)
-                </a>
-            <?php else: ?>
-                <span class="text-slate-400">No past trials yet</span>
-            <?php endif; ?>
-        </div>
-    </div>
-
-    <div class="flex items-center justify-end mb-2">
-        <a href="<?= site_url('admin/trials/create') ?>" class="text-[11px] text-slate-500 hover:text-slate-700 mr-3">
-            + Create Trial
+        <a href="<?= site_url('admin/attendance') ?>" class="text-xs text-slate-500 hover:text-slate-700">
+            860 Back to upcoming trials
         </a>
     </div>
 
@@ -41,7 +29,7 @@
             <?php if (empty($trials)): ?>
                 <tr>
                     <td colspan="5" class="px-3 py-6 text-center text-slate-500">
-                        No trials found. Create a trial first.
+                        No past trials found.
                     </td>
                 </tr>
             <?php else: ?>
@@ -73,16 +61,6 @@
                             <?php endif; ?>
                         </td>
                         <td class="px-3 py-2 align-top text-right space-y-1">
-                            <a href="<?= site_url('admin/attendance/manage/' . (int) $trial['id']) ?>"
-                               class="inline-flex items-center rounded-md bg-slate-900 px-3 py-1.5 text-[11px] font-medium text-white hover:bg-slate-800">
-                                Mark Attendance
-                            </a>
-                            <div>
-                                <a href="<?= site_url('admin/attendance/on-spot/' . (int) $trial['id']) ?>"
-                                   class="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-medium text-emerald-800 hover:bg-emerald-100">
-                                    On-spot Registration
-                                </a>
-                            </div>
                             <div>
                                 <a href="<?= site_url('admin/attendance/summary/' . (int) $trial['id']) ?>"
                                    class="inline-flex items-center rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-[11px] font-medium text-blue-800 hover:bg-blue-100">
@@ -105,5 +83,3 @@
 </div>
 
 <?= $this->endSection() ?>
-
-

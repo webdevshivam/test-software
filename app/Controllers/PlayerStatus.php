@@ -67,31 +67,27 @@ class PlayerStatus extends BaseController
             'unpaid'         => 'bg-red-100 text-red-800',
             'partially_paid' => 'bg-yellow-100 text-yellow-800',
             'paid'           => 'bg-green-100 text-green-800',
-            'fully_paid'     => 'bg-green-100 text-green-800',
         ];
 
         $labelMap = [
             'unpaid'         => 'Unpaid',
             'partially_paid' => 'Partially Paid',
             'paid'           => 'Paid',
-            'fully_paid'     => 'Paid',
         ];
 
         $step = match ($status) {
             'unpaid'         => 1,
             'partially_paid' => 2,
             'paid'           => 3,
-            'fully_paid'     => 3,
             default          => 1,
         };
 
-        $showTrialInfo = in_array($status, ['partially_paid', 'paid', 'fully_paid'], true);
+        $showTrialInfo = in_array($status, ['partially_paid', 'paid'], true);
 
         $nextMessage = match ($status) {
             'unpaid'         => 'Please pay your T-shirt fee (₹199) and cricket trial fee to confirm your slot.',
             'partially_paid' => 'Your T-shirt fee is paid. Please pay the remaining cricket trial fee before the reporting date.',
             'paid'           => 'All fees are paid. Please report on time with your ID proof and kit.',
-            'fully_paid'     => 'All fees are paid. Please report on time with your ID proof and kit.',
             default          => '',
         };
 

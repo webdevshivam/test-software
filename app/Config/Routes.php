@@ -28,18 +28,27 @@ $routes->group('admin', ['filter' => 'adminauth'], static function (RouteCollect
 
     // Players management
     $routes->get('players', 'Admin\Players::index');
+    $routes->post('players/bulk-delete', 'Admin\Players::bulkDelete');
     $routes->post('players/update-payment/(:num)', 'Admin\Players::updatePayment/$1');
     $routes->get('players/export/csv', 'Admin\Players::exportCsv');
     $routes->get('players/export/excel', 'Admin\Players::exportExcel');
+    $routes->get('players/export/pdf', 'Admin\Players::exportPdf');
 
     // Attendance management
     $routes->get('attendance', 'Admin\Attendance::index');
+    $routes->get('attendance/past', 'Admin\Attendance::past');
     $routes->get('attendance/manage/(:num)', 'Admin\Attendance::manage/$1');
     $routes->post('attendance/save/(:num)', 'Admin\Attendance::save/$1');
     $routes->get('attendance/on-spot/(:num)', 'Admin\Attendance::onSpotForm/$1');
     $routes->post('attendance/on-spot/(:num)', 'Admin\Attendance::onSpotStore/$1');
     $routes->get('attendance/export/(:num)', 'Admin\Attendance::export/$1');
     $routes->get('attendance/summary/(:num)', 'Admin\AttendanceSummary::index/$1');
+    $routes->get('attendance/summary/(:num)/export/csv', 'Admin\AttendanceSummary::exportCsv/$1');
+    $routes->get('attendance/summary/(:num)/export/pdf', 'Admin\AttendanceSummary::exportPdf/$1');
+
+    // Payments reporting
+    $routes->get('payments', 'Admin\Payments::index');
+    $routes->get('payments/export', 'Admin\Payments::export');
 });
 
 // Admin login/logout (no DB users, simple password)

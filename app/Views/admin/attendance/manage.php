@@ -54,7 +54,7 @@
         </div>
     </div>
 
-    <form action="<?= site_url('admin/attendance/save/' . (int) $trial['id']) ?>" method="post">
+    <form id="attendanceForm" action="<?= site_url('admin/attendance/save/' . (int) $trial['id']) ?>" method="post">
         <?= csrf_field() ?>
         <div class="mb-3 flex items-center justify-between gap-2 text-[11px]">
             <div class="flex items-center gap-2">
@@ -106,15 +106,13 @@
                         $badgeClass = match ($status) {
                             'unpaid' => 'bg-red-50 text-red-700 border-red-200',
                             'partially_paid' => 'bg-amber-50 text-amber-700 border-amber-200',
-                            'paid' => 'bg-sky-50 text-sky-700 border-sky-200',
-                            'fully_paid' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                            'paid' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
                             default => 'bg-slate-50 text-slate-700 border-slate-200',
                         };
                         $statusLabel = match ($status) {
                             'unpaid' => 'Unpaid',
                             'partially_paid' => 'Partially Paid',
                             'paid' => 'Paid',
-                            'fully_paid' => 'Fully Paid',
                             default => ucfirst((string) $status),
                         };
                         ?>
@@ -150,10 +148,18 @@
                             </td>
                             <td class="px-3 py-2 align-top text-xs text-slate-700">
                                 <?php if ((float)$player['due_amount'] > 0): ?>
-                                    <input type="number" step="0.01" min="0"
-                                           name="attendance[<?= (int) $player['id'] ?>][collect_amount]"
-                                           placeholder="0.00"
-                                           class="w-24 rounded-md border border-slate-300 px-2 py-1.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                    <div class="flex items-center gap-1">
+                                        <input type="number" step="0.01" min="0"
+                                               name="attendance[<?= (int) $player['id'] ?>][collect_amount]"
+                                               placeholder="0.00"
+                                               data-due="<?= (float)$player['due_amount'] ?>"
+                                               class="collect-input w-24 rounded-md border border-slate-300 px-2 py-1.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                        <button type="button"
+                                                class="collect-full inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-medium text-emerald-800 hover:bg-emerald-100"
+                                                data-player="<?= esc($player['full_name']) ?>">
+                                            Collect Full
+                                        </button>
+                                    </div>
                                     <div class="mt-1 text-[10px] text-slate-500">
                                         Due: ₹<?= number_format((float)$player['due_amount'], 2) ?>
                                     </div>
@@ -236,6 +242,38 @@
     if (defaultFilter) {
         defaultFilter.classList.add('active');
     }
+
+    // Collect Full button logic: set full due amount and submit immediately with confirmation.
+    document.querySelectorAll('.collect-full').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const row = this.closest('.attendance-row');
+            const input = row.querySelector('.collect-input');
+            const checkbox = row.querySelector('.present-toggle');
+            const due = parseFloat(input.getAttribute('data-due') || '0');
+            const playerName = this.getAttribute('data-player') || 'this player';
+
+            if (!due || due <= 0) {
+                alert('No due amount remaining for ' + playerName + '.');
+                return;
+            }
+
+            const ok = confirm('Collect ₹' + due.toFixed(2) + ' from ' + playerName + ' and mark payment now?');
+            if (!ok) {
+                return;
+            }
+
+            input.value = due.toFixed(2);
+
+            if (checkbox) {
+                checkbox.checked = true;
+            }
+
+            const form = document.getElementById('attendanceForm');
+            if (form) {
+                form.submit();
+            }
+        });
+    });
 </script>
 
 <?= $this->endSection() ?>

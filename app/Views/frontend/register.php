@@ -1,6 +1,10 @@
 <?= $this->extend('layouts/frontend') ?>
 
 <?= $this->section('content') ?>
+<?php
+    // Ensure we always have the current validation instance (with session errors after redirect).
+    $validation = $validation ?? \Config\Services::validation();
+?>
 <div class="grid md:grid-cols-[2fr,1.4fr] gap-8">
     <section>
         <h1 class="text-xl font-semibold text-slate-800 mb-1">Player Registration</h1>

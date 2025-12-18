@@ -3,14 +3,20 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
-use App\Models\TrialModel;
+use App\Services\TrialService;
 
 class Trials extends BaseController
 {
+    private TrialService $trialService;
+
+    public function __construct()
+    {
+        $this->trialService = service('trialService');
+    }
+
     public function index()
     {
-        $model  = new TrialModel();
-        $trials = $model->where('deleted_at', null)->orderBy('trial_date', 'DESC')->findAll();
+        $trials = $this->trialService->getAll();
 
         return view('admin/trials/index', [
             'title'  => 'Manage Trials',
@@ -42,7 +48,6 @@ class Trials extends BaseController
             return redirect()->back()->withInput()->with('error', 'Please correct the errors below.');
         }
 
-        $model = new TrialModel();
         $data  = [
             'name'           => $this->request->getPost('name'),
             'city'           => $this->request->getPost('city'),
@@ -53,17 +58,16 @@ class Trials extends BaseController
             'status'         => $this->request->getPost('status'),
         ];
 
-        $model->insert($data);
+        $this->trialService->create($data);
 
         return redirect()->to('/admin/trials')->with('message', 'Trial created successfully.');
     }
 
     public function edit(int $id)
     {
-        $model = new TrialModel();
-        $trial = $model->find($id);
+        $trial = $this->trialService->findActive($id);
 
-        if (! $trial || $trial['deleted_at'] !== null) {
+        if ($trial === null) {
             return redirect()->to('/admin/trials')->with('message', 'Trial not found.');
         }
 
@@ -89,7 +93,6 @@ class Trials extends BaseController
             return redirect()->back()->withInput()->with('error', 'Please correct the errors below.');
         }
 
-        $model = new TrialModel();
         $data  = [
             'name'           => $this->request->getPost('name'),
             'city'           => $this->request->getPost('city'),
@@ -100,15 +103,14 @@ class Trials extends BaseController
             'status'         => $this->request->getPost('status'),
         ];
 
-        $model->update($id, $data);
+        $this->trialService->update($id, $data);
 
         return redirect()->to('/admin/trials')->with('message', 'Trial updated successfully.');
     }
 
     public function delete(int $id)
     {
-        $model = new TrialModel();
-        $model->delete($id);
+        $this->trialService->delete($id);
 
         return redirect()->to('/admin/trials')->with('message', 'Trial deleted.');
     }

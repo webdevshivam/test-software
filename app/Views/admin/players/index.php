@@ -4,10 +4,24 @@
 <div class="space-y-4">
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-lg font-semibold text-slate-900">Players</h1>
+            <h1 class="text-lg font-semibold text-slate-900"><?= esc($title ?? 'Players') ?></h1>
             <p class="text-xs text-slate-500 mt-0.5">
-                View registrations, filter, update payments and export data.
+                <?php if (! empty($isSpamView)): ?>
+                    Review and clean up suspicious / invalid registrations.
+                <?php else: ?>
+                    View registrations, filter, update payments and export data.
+                <?php endif; ?>
             </p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <a href="<?= site_url('admin/players') ?>"
+               class="text-[11px] <?= !empty($isSpamView) ? 'text-slate-500 hover:text-slate-700' : 'text-emerald-700 font-semibold' ?>">
+                All Players
+            </a>
+            <a href="<?= site_url('admin/players?spam=1') ?>"
+               class="text-[11px] <?= !empty($isSpamView) ? 'text-emerald-700 font-semibold' : 'text-slate-500 hover:text-slate-700' ?>">
+                Suspicious Registrations
+            </a>
         </div>
         <div class="flex items-center space-x-2">
             <a href="<?= current_url() . '?' . http_build_query($filters) ?>&export=1"
@@ -19,6 +33,10 @@
             <a href="<?= site_url('admin/players/export/excel') . '?' . http_build_query($filters) ?>"
                class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-50">
                 Export Excel
+            </a>
+            <a href="<?= site_url('admin/players/export/pdf') . '?' . http_build_query($filters) ?>"
+               class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-50">
+                Export PDF
             </a>
         </div>
     </div>
@@ -46,7 +64,6 @@
                         'unpaid' => 'Unpaid',
                         'partially_paid' => 'Partially Paid',
                         'paid' => 'Paid',
-                        'fully_paid' => 'Fully Paid',
                     ];
                     foreach ($opts as $key => $label): ?>
                         <option value="<?= $key ?>" <?= $statusFilter === $key ? 'selected' : '' ?>><?= $label ?></option>
@@ -97,45 +114,56 @@
         </div>
     </form>
 
-    <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <table class="min-w-full text-xs">
-            <thead class="bg-slate-50 text-slate-600">
-            <tr>
-                <th class="px-3 py-2 text-left font-medium">Player</th>
-                <th class="px-3 py-2 text-left font-medium">Trial</th>
-                <th class="px-3 py-2 text-left font-medium">Fees</th>
-                <th class="px-3 py-2 text-left font-medium">Payment</th>
-                <th class="px-3 py-2 text-left font-medium">Registered</th>
-                <th class="px-3 py-2 text-right font-medium">Update</th>
-            </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100">
-            <?php if (empty($players)): ?>
+    <form action="<?= site_url('admin/players/bulk-delete') ?>" method="post"
+          onsubmit="return confirm('Are you sure you want to delete selected players? This cannot be undone.');">
+        <?= csrf_field() ?>
+        <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <table class="min-w-full text-xs">
+                <thead class="bg-slate-50 text-slate-600">
                 <tr>
-                    <td colspan="6" class="px-3 py-6 text-center text-slate-500">
-                        No players found for the selected filters.
-                    </td>
+                    <th class="px-3 py-2 text-left font-medium">
+                        <input type="checkbox" id="selectAllPlayers"
+                               class="h-3.5 w-3.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                    </th>
+                    <th class="px-3 py-2 text-left font-medium">Player</th>
+                    <th class="px-3 py-2 text-left font-medium">Trial</th>
+                    <th class="px-3 py-2 text-left font-medium">Fees</th>
+                    <th class="px-3 py-2 text-left font-medium">Payment</th>
+                    <th class="px-3 py-2 text-left font-medium">Registered</th>
+                    <th class="px-3 py-2 text-right font-medium">Update</th>
                 </tr>
-            <?php else: ?>
-                <?php foreach ($players as $player): ?>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                <?php if (empty($players)): ?>
+                    <tr>
+                        <td colspan="7" class="px-3 py-6 text-center text-slate-500">
+                            No players found for the selected filters.
+                        </td>
+                    </tr>
+                <?php else: ?>
+                    <?php foreach ($players as $player): ?>
                     <?php
                     $status = $player['payment_status'];
                     $badgeClass = match ($status) {
                         'unpaid' => 'bg-red-50 text-red-700 border-red-200',
                         'partially_paid' => 'bg-amber-50 text-amber-700 border-amber-200',
-                        'paid' => 'bg-sky-50 text-sky-700 border-sky-200',
-                        'fully_paid' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                        'paid' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
                         default => 'bg-slate-50 text-slate-700 border-slate-200',
                     };
                     $statusLabel = match ($status) {
                         'unpaid' => 'Unpaid',
                         'partially_paid' => 'Partially Paid',
                         'paid' => 'Paid',
-                        'fully_paid' => 'Fully Paid',
                         default => ucfirst((string) $status),
                     };
                     ?>
                     <tr>
+                        <td class="px-3 py-2 align-top">
+                            <input type="checkbox"
+                                   name="player_ids[]"
+                                   value="<?= (int) $player['id'] ?>"
+                                   class="player-checkbox h-3.5 w-3.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                        </td>
                         <td class="px-3 py-2 align-top">
                             <div class="font-medium text-slate-900"><?= esc($player['full_name']) ?></div>
                             <div class="text-[11px] text-slate-500">
@@ -176,18 +204,12 @@
                         <td class="px-3 py-2 align-top text-right">
                             <form action="<?= site_url('admin/players/update-payment/' . (int)$player['id']) ?>" method="post" class="space-y-1 inline-block text-[11px] text-left">
                                 <?= csrf_field() ?>
-                                <div class="flex items-center space-x-1">
-                                    <select name="payment_status"
-                                            class="rounded-md border border-slate-300 bg-white px-1.5 py-1 text-[11px] focus:outline-none focus:ring-1 focus:ring-emerald-500">
-                                        <?php foreach ($opts as $key => $label): ?>
-                                            <option value="<?= $key ?>" <?= $status === $key ? 'selected' : '' ?>><?= $label ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    <input type="number" step="0.01" name="paid_amount"
-                                           value="<?= esc($player['paid_amount']) ?>"
-                                           class="w-20 rounded-md border border-slate-300 px-1.5 py-1 text-[11px] focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                                           placeholder="Paid">
-                                </div>
+                                <select name="payment_status"
+                                        class="w-full rounded-md border border-slate-300 bg-white px-1.5 py-1 text-[11px] focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                    <?php foreach ($opts as $key => $label): ?>
+                                        <option value="<?= $key ?>" <?= $status === $key ? 'selected' : '' ?>><?= $label ?></option>
+                                    <?php endforeach; ?>
+                                </select>
                                 <button type="submit"
                                         class="mt-1 w-full inline-flex items-center justify-center rounded-md bg-slate-900 px-2 py-1 text-[10px] font-medium text-white hover:bg-slate-800">
                                     Save
@@ -196,17 +218,55 @@
                         </td>
                     </tr>
                 <?php endforeach; ?>
-            <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
-
-    <?php if (! empty($pager)): ?>
-        <div class="mt-2 text-xs text-slate-500">
-            <?= $pager->links() ?>
+                <?php endif; ?>
+                </tbody>
+            </table>
         </div>
-    <?php endif; ?>
+
+        <div class="mt-2 flex items-center justify-between text-xs">
+            <button type="submit"
+                    class="inline-flex items-center rounded-md bg-rose-600 px-3 py-1.5 text-[11px] font-medium text-white hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                    id="bulkDeleteBtn"
+                    disabled>
+                Delete Selected
+            </button>
+            <?php if (! empty($pager)): ?>
+                <div class="text-slate-500">
+                    <?= $pager->links() ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    </form>
+
 </div>
+
+<script>
+    (function () {
+        const selectAll = document.getElementById('selectAllPlayers');
+        const checkboxes = document.querySelectorAll('.player-checkbox');
+        const bulkBtn = document.getElementById('bulkDeleteBtn');
+
+        function updateBulkState() {
+            const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+            if (bulkBtn) {
+                bulkBtn.disabled = !anyChecked;
+            }
+        }
+
+        if (selectAll) {
+            selectAll.addEventListener('change', function () {
+                checkboxes.forEach(cb => {
+                    cb.checked = selectAll.checked;
+                });
+                updateBulkState();
+            });
+        }
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', updateBulkState);
+        });
+    })();
+</script>
 
 <?= $this->endSection() ?>
 

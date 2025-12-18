@@ -14,13 +14,29 @@ class Attendance extends BaseController
     {
         $trialModel = new TrialModel();
 
-        $trials = $trialModel
-            ->where('deleted_at', null)
-            ->orderBy('trial_date', 'DESC')
-            ->findAll();
+        // Show only upcoming or today trials for primary attendance view.
+        $trials = $trialModel->getUpcomingTrials();
+
+        // Also fetch past trials count for quick link (optional).
+        $pastCount = $trialModel->getPastTrials() ? count($trialModel->getPastTrials()) : 0;
 
         return view('admin/attendance/index', [
-            'title'  => 'Attendance by Trial',
+            'title'     => 'Attendance by Trial',
+            'trials'    => $trials,
+            'pastCount' => $pastCount,
+        ]);
+    }
+
+    /**
+     * List trials whose dates are already over, for viewing reports/export.
+     */
+    public function past()
+    {
+        $trialModel = new TrialModel();
+        $trials     = $trialModel->getPastTrials();
+
+        return view('admin/attendance/past', [
+            'title'  => 'Past Trials - Attendance',
             'trials' => $trials,
         ]);
     }
@@ -195,7 +211,8 @@ class Attendance extends BaseController
         $attendanceModel = new AttendanceModel();
         $paymentModel    = new PaymentModel();
 
-        $registrationId = sprintf('TRIAL-%s-%s', date('Y'), random_int(1000, 9999));
+        // Generate unique registration ID with MPCL prefix and trial code
+        $registrationId = $this->generateUniqueRegistrationId($playerModel, $trial);
 
         $playerData = [
             'registration_id' => $registrationId,
@@ -318,6 +335,75 @@ class Attendance extends BaseController
             ->setHeader('Content-Type', 'text/csv')
             ->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
             ->setBody($csvContent);
+    }
+
+    /**
+     * Generate a code from trial name
+     * Extracts uppercase letters and numbers, takes first 3-4 characters
+     *
+     * @param string $trialName
+     * @param string $city
+     * @return string
+     */
+    private function generateTrialCode(string $trialName, string $city): string
+    {
+        // Remove special characters and spaces, convert to uppercase
+        $cleanName = preg_replace('/[^A-Za-z0-9]/', '', $trialName);
+        $cleanName = strtoupper($cleanName);
+        
+        // If name is too short, use city code as fallback
+        if (strlen($cleanName) < 3) {
+            $cityCode = preg_replace('/[^A-Za-z0-9]/', '', $city);
+            $cityCode = strtoupper($cityCode);
+            $cleanName = substr($cityCode, 0, 3) . $cleanName;
+        }
+        
+        // Take first 3-4 characters for code
+        $code = substr($cleanName, 0, 4);
+        
+        // Ensure minimum 3 characters
+        if (strlen($code) < 3) {
+            $code = str_pad($code, 3, 'X', STR_PAD_RIGHT);
+        }
+        
+        return $code;
+    }
+
+    /**
+     * Generate a unique registration ID with format: MPCL-[TRIAL_CODE]-[UNIQUE_NUMBER]
+     *
+     * @param PlayerModel $playerModel
+     * @param array $trial Trial data with name and city
+     * @return string
+     */
+    private function generateUniqueRegistrationId(PlayerModel $playerModel, array $trial): string
+    {
+        $trialCode = $this->generateTrialCode($trial['name'] ?? '', $trial['city'] ?? '');
+        $maxAttempts = 20;
+        $startNumber = 1000;
+        $endNumber = 9999;
+
+        for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
+            $uniqueNumber = random_int($startNumber, $endNumber);
+            $registrationId = sprintf('MPCL-%s-%s', $trialCode, $uniqueNumber);
+
+            // Optimized check: only select ID column for faster query
+            $exists = $playerModel->select('id')
+                ->where('registration_id', $registrationId)
+                ->where('deleted_at', null)
+                ->first();
+
+            if (! $exists) {
+                return $registrationId;
+            }
+        }
+
+        // Fallback: use timestamp-based number if random collisions occur
+        $fallbackNumber = time() % 10000;
+        if ($fallbackNumber < 1000) {
+            $fallbackNumber += 1000;
+        }
+        return sprintf('MPCL-%s-%s', $trialCode, $fallbackNumber);
     }
 }
 

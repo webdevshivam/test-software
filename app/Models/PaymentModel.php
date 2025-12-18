@@ -8,7 +8,7 @@ class PaymentModel extends Model
 {
     protected $table         = 'payments';
     protected $primaryKey    = 'id';
-    protected $useTimestamps = true;
+    protected $useTimestamps = false;
 
     protected $allowedFields = [
         'player_id',

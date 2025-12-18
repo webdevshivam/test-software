@@ -28,6 +28,28 @@ class TrialModel extends Model
             ->orderBy('trial_date', 'ASC')
             ->findAll();
     }
+
+    /**
+     * Trials with trial_date today or in the future.
+     */
+    public function getUpcomingTrials(): array
+    {
+        return $this->where('deleted_at', null)
+            ->where('trial_date >=', date('Y-m-d'))
+            ->orderBy('trial_date', 'ASC')
+            ->findAll();
+    }
+
+    /**
+     * Trials with trial_date in the past.
+     */
+    public function getPastTrials(): array
+    {
+        return $this->where('deleted_at', null)
+            ->where('trial_date <', date('Y-m-d'))
+            ->orderBy('trial_date', 'DESC')
+            ->findAll();
+    }
 }
 
 

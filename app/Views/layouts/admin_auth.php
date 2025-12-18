@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title><?= esc($title ?? 'Admin Login') ?></title>
+    <title><?= esc($title ?? 'MPCL Admin Login') ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" type="image/png" href="/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,11 +18,11 @@
     <div class="bg-slate-900/60 border border-slate-700 rounded-2xl shadow-xl p-6">
         <div class="flex items-center space-x-3 mb-6">
             <div class="h-10 w-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white font-semibold">
-                AD
+                MP
             </div>
             <div>
-                <div class="text-sm font-semibold tracking-tight">Admin Panel</div>
-                <div class="text-[11px] text-slate-400">Trial Management System</div>
+                <div class="text-sm font-semibold tracking-tight">MPCL Admin Panel</div>
+                <div class="text-[11px] text-slate-400">MegaStar Premier Cricket League</div>
             </div>
         </div>
 
